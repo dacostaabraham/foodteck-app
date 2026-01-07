@@ -188,28 +188,28 @@ export default function MarchePage() {
     return true;
   });
 
-  const handleAddToCart = async (produit: Produit) => {
-  try {
-    await addItem({
-      product_id: produit.id,
-      product_name: produit.name,
-      product_type: 'ingredient',
-      quantity: 1,
-      unit: produit.unit,
-      quality: produit.quality === 'bio' ? 'Bio' : produit.quality === 'premium' ? 'Premium' : 'Standard',
-      prix_unitaire: produit.price,
-      metadata: {
-        emoji: produit.emoji,
-        category: produit.type,
-        origin: produit.origin,
-      },
-    });
-    alert(`✅ ${produit.name} ajouté au panier !`);
-  } catch (error) {
-    console.error('Erreur ajout panier:', error);
-    alert('❌ Erreur lors de l\'ajout au panier');
-  }
-};
+    const handleAddToCart = async (produit: Produit) => {
+    try {
+      await addItem({
+        product_id: produit.id.toString(), // Conversion de number à string
+        product_name: produit.name,
+        product_type: 'ingredient',
+        quantity: 1,
+        unit: produit.unit,
+        quality: produit.quality === 'bio' ? 'Bio' : produit.quality === 'premium' ? 'Premium' : 'Standard',
+        prix_unitaire: produit.price,
+        metadata: {
+          emoji: produit.emoji,
+          category: produit.type,
+          // origin: produit.origin, // Propriété 'origin' supprimée
+        },
+      });
+      alert(`✅ ${produit.name} ajouté au panier !`);
+    } catch (error) {
+      console.error('Erreur ajout panier:', error);
+      alert('❌ Erreur lors de l\'ajout au panier');
+    }
+  };
 
   // État de chargement
   if (loading) {

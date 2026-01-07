@@ -22,7 +22,7 @@ import { useAuth } from './AuthContext';
 
 export interface CartItem {
   id: string;
-  product_id?: number;
+  product_id?: string; // ✅ UUID Supabase
   product_name: string;
   product_type: 'ingredient' | 'dish' | 'menu';
   quantity: number;
@@ -35,8 +35,15 @@ export interface CartItem {
     category?: string;
     description?: string;
     image?: string;
+  
+    // 🔥 Extensions métier
+    origin?: string;
+    type_marche?: 'gros' | 'detail';
+    remise?: string;
   };
+  
 }
+
 
 interface CartContextType {
   items: CartItem[];
