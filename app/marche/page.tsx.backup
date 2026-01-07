@@ -1,0 +1,311 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+
+interface Produit {
+  id: number;
+  name: string;
+  type: string;
+  price: number;
+  unit: string;
+  emoji: string;
+  origin: string;
+  quality: string;
+  season: 'saison' | 'hors-saison';
+  description?: string;
+}
+
+export default function MarchePage() {
+  const [filters, setFilters] = useState({
+    type: 'tous',
+    origin: 'tous',
+    quality: 'tous',
+    season: 'tous'
+  });
+
+  // Données produits de démonstration (à remplacer par appel API)
+  const produits: Produit[] = [
+    { id: 1, name: 'Tomates', type: 'legumes', price: 500, unit: 'kg', emoji: '🍅', origin: 'local', quality: 'standard', season: 'saison', description: 'Tomates fraîches et juteuses' },
+    { id: 2, name: 'Bananes plantain', type: 'fruits', price: 300, unit: 'kg', emoji: '🍌', origin: 'local', quality: 'premium', season: 'saison', description: 'Bananes plantain mûres' },
+    { id: 3, name: 'Poulet fermier', type: 'viandes', price: 2500, unit: 'kg', emoji: '🍗', origin: 'national', quality: 'premium', season: 'saison', description: 'Poulet élevé en plein air' },
+    { id: 4, name: 'Poissons frais', type: 'poissons', price: 1800, unit: 'kg', emoji: '🐟', origin: 'local', quality: 'premium', season: 'saison', description: 'Poissons de mer fraîchement pêchés' },
+    { id: 5, name: 'Aubergines', type: 'legumes', price: 400, unit: 'kg', emoji: '🍆', origin: 'local', quality: 'standard', season: 'saison', description: 'Aubergines locales' },
+    { id: 6, name: 'Mangues', type: 'fruits', price: 600, unit: 'kg', emoji: '🥭', origin: 'local', quality: 'premium', season: 'saison', description: 'Mangues sucrées et parfumées' },
+    { id: 7, name: 'Bœuf', type: 'viandes', price: 3500, unit: 'kg', emoji: '🥩', origin: 'national', quality: 'standard', season: 'saison', description: 'Viande de bœuf locale' },
+    { id: 8, name: 'Crevettes', type: 'poissons', price: 4500, unit: 'kg', emoji: '🦐', origin: 'local', quality: 'premium', season: 'saison', description: 'Crevettes fraîches' },
+    { id: 9, name: 'Oignons', type: 'legumes', price: 350, unit: 'kg', emoji: '🧅', origin: 'national', quality: 'standard', season: 'saison', description: 'Oignons rouges' },
+    { id: 10, name: 'Ananas', type: 'fruits', price: 500, unit: 'pièce', emoji: '🍍', origin: 'local', quality: 'premium', season: 'saison', description: 'Ananas Victoria sucré' },
+    { id: 11, name: 'Agneau', type: 'viandes', price: 3000, unit: 'kg', emoji: '🐑', origin: 'national', quality: 'premium', season: 'saison', description: 'Viande d\'agneau tendre' },
+    { id: 12, name: 'Carottes', type: 'legumes', price: 450, unit: 'kg', emoji: '🥕', origin: 'local', quality: 'bio', season: 'saison', description: 'Carottes biologiques' },
+  ];
+
+  const filteredProduits = produits.filter(produit => {
+    if (filters.type !== 'tous' && produit.type !== filters.type) return false;
+    if (filters.origin !== 'tous' && produit.origin !== filters.origin) return false;
+    if (filters.quality !== 'tous' && produit.quality !== filters.quality) return false;
+    if (filters.season !== 'tous' && produit.season !== filters.season) return false;
+    return true;
+  });
+
+  const handleAddToCart = (productId: number) => {
+    const product = produits.find(p => p.id === productId);
+    alert(`"${product?.name}" ajouté au panier ! 🛒`);
+    // TODO: Implémenter la logique d'ajout au panier
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
+      <Header />
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {/* En-tête avec navigation */}
+        <div 
+          className="mb-6 rounded-2xl p-6 shadow-lg text-center"
+          style={{ background: 'linear-gradient(135deg, #9b7ec9 0%, #b19cd9 100%)' }}
+        >
+          <h1 className="text-2xl font-bold text-white mb-3">
+            🛒 Marché - Ingrédients Frais
+          </h1>
+          <p className="text-sm text-white/90 mb-4">
+            Commandez vos ingrédients frais directement auprès de nos producteurs locaux
+          </p>
+          
+          {/* Boutons de navigation */}
+          <div className="flex items-center justify-center gap-3">
+            <button
+              className="px-4 py-2 text-sm font-medium rounded-lg shadow-md transition"
+              style={{ backgroundColor: '#5a4a7c', color: 'white' }}
+            >
+              🛒 Marché de détail
+            </button>
+            <Link href="/marche-gros">
+              <button
+                className="px-4 py-2 text-sm font-medium bg-white rounded-lg hover:bg-gray-100 transition"
+                style={{ color: '#5a4a7c' }}
+              >
+                🏭 Marché de Gros
+              </button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Filtres */}
+        <div className="bg-white rounded-2xl shadow-lg p-5 mb-6">
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#5a4a7c' }}>
+            🔍 Filtrer les produits
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Type de produit */}
+            <div>
+              <label className="block text-sm font-semibold mb-2" style={{ color: '#5a4a7c' }}>
+                Type de produit
+              </label>
+              <select
+                value={filters.type}
+                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+                className="w-full px-3 py-2 text-sm rounded-lg border-2 focus:outline-none transition"
+                style={{ borderColor: '#e0d4f7' }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#9b7ec9'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#e0d4f7'}
+              >
+                <option value="tous">Tous les produits</option>
+                <option value="legumes">🥬 Légumes</option>
+                <option value="fruits">🍎 Fruits</option>
+                <option value="viandes">🥩 Viandes</option>
+                <option value="poissons">🐟 Poissons</option>
+                <option value="transformes">🥫 Produits transformés</option>
+                <option value="pret-emploi">🍱 Prêt à l'emploi</option>
+              </select>
+            </div>
+
+            {/* Origine */}
+            <div>
+              <label className="block text-sm font-semibold mb-2" style={{ color: '#5a4a7c' }}>
+                Origine
+              </label>
+              <select
+                value={filters.origin}
+                onChange={(e) => setFilters({ ...filters, origin: e.target.value })}
+                className="w-full px-3 py-2 text-sm rounded-lg border-2 focus:outline-none transition"
+                style={{ borderColor: '#e0d4f7' }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#9b7ec9'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#e0d4f7'}
+              >
+                <option value="tous">Toutes origines</option>
+                <option value="local">📍 Local (Abidjan)</option>
+                <option value="national">🇨🇮 National (Côte d'Ivoire)</option>
+                <option value="regional">🌍 Régional (Afrique de l'Ouest)</option>
+              </select>
+            </div>
+
+            {/* Qualité */}
+            <div>
+              <label className="block text-sm font-semibold mb-2" style={{ color: '#5a4a7c' }}>
+                Qualité
+              </label>
+              <select
+                value={filters.quality}
+                onChange={(e) => setFilters({ ...filters, quality: e.target.value })}
+                className="w-full px-3 py-2 text-sm rounded-lg border-2 focus:outline-none transition"
+                style={{ borderColor: '#e0d4f7' }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#9b7ec9'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#e0d4f7'}
+              >
+                <option value="tous">Toutes qualités</option>
+                <option value="standard">⭐ Standard</option>
+                <option value="premium">⭐⭐ Premium</option>
+                <option value="bio">🌿 Bio</option>
+              </select>
+            </div>
+
+            {/* Saison */}
+            <div>
+              <label className="block text-sm font-semibold mb-2" style={{ color: '#5a4a7c' }}>
+                Saison
+              </label>
+              <select
+                value={filters.season}
+                onChange={(e) => setFilters({ ...filters, season: e.target.value })}
+                className="w-full px-3 py-2 text-sm rounded-lg border-2 focus:outline-none transition"
+                style={{ borderColor: '#e0d4f7' }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#9b7ec9'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#e0d4f7'}
+              >
+                <option value="tous">Toutes saisons</option>
+                <option value="saison">🌞 De saison</option>
+                <option value="hors-saison">❄️ Hors saison</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Compteur de résultats */}
+          <div className="mt-4 text-sm" style={{ color: '#5a4a7c' }}>
+            <span className="font-semibold">{filteredProduits.length}</span> produit{filteredProduits.length > 1 ? 's' : ''} trouvé{filteredProduits.length > 1 ? 's' : ''}
+          </div>
+        </div>
+
+        {/* Grille des produits */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {filteredProduits.map((produit) => {
+            return (
+              <div 
+                key={produit.id} 
+                className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all hover:shadow-xl hover:-translate-y-1 relative"
+              >
+                {/* Badge qualité - CORRIGÉ: parent a maintenant "relative" */}
+                {produit.quality === 'bio' && (
+                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-md" style={{ backgroundColor: '#22c55e', color: 'white' }}>
+                    🌿 BIO
+                  </div>
+                )}
+                {produit.quality === 'premium' && (
+                  <div className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-md" style={{ backgroundColor: '#f59e0b', color: 'white' }}>
+                    ⭐ PREMIUM
+                  </div>
+                )}
+
+                {/* Image du produit */}
+                <div 
+                  className="flex items-center justify-center p-8"
+                  style={{ background: 'linear-gradient(135deg, #f0e6ff 0%, #fce6f0 100%)' }}
+                >
+                  <span className="text-7xl">{produit.emoji}</span>
+                </div>
+
+                {/* Informations du produit */}
+                <div className="p-4">
+                  <h3 className="text-base font-bold mb-1" style={{ color: '#5a4a7c' }}>
+                    {produit.name}
+                  </h3>
+                  {produit.description && (
+                    <p className="text-xs text-gray-600 mb-3">
+                      {produit.description}
+                    </p>
+                  )}
+                  <p className="text-xs mb-3" style={{ color: '#666' }}>
+                    Prix au {produit.unit}
+                  </p>
+                  <div className="text-2xl font-bold mb-4" style={{ color: '#16a34a' }}>
+                    {produit.price.toLocaleString()} FCFA
+                  </div>
+
+                  {/* Bouton Ajouter au panier */}
+                  <button
+                    onClick={() => handleAddToCart(produit.id)}
+                    className="w-full py-2.5 px-4 text-sm font-semibold text-white rounded-lg shadow-md transition hover:opacity-90"
+                    style={{ background: 'linear-gradient(135deg, #9b7ec9 0%, #b19cd9 100%)' }}
+                  >
+                    🛒 Ajouter au panier
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Message si aucun produit */}
+        {filteredProduits.length === 0 && (
+          <div 
+            className="text-center py-12 rounded-2xl"
+            style={{ background: 'linear-gradient(135deg, #f0e6ff 0%, #fce6f0 100%)' }}
+          >
+            <span className="text-6xl mb-4 block">🔍</span>
+            <h3 className="text-xl font-bold mb-2" style={{ color: '#5a4a7c' }}>
+              Aucun produit trouvé
+            </h3>
+            <p className="text-sm text-gray-600">
+              Essayez de modifier vos filtres pour voir plus de produits
+            </p>
+          </div>
+        )}
+
+        {/* Informations additionnelles */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div 
+            className="bg-white rounded-2xl p-5 shadow-lg text-center"
+            style={{ border: '2px solid #e0d4f7' }}
+          >
+            <div className="text-3xl mb-2">🚚</div>
+            <h3 className="text-sm font-semibold mb-1" style={{ color: '#5a4a7c' }}>
+              Livraison rapide
+            </h3>
+            <p className="text-xs text-gray-600">
+              Livraison gratuite dès 10 000 FCFA
+            </p>
+          </div>
+
+          <div 
+            className="bg-white rounded-2xl p-5 shadow-lg text-center"
+            style={{ border: '2px solid #e0d4f7' }}
+          >
+            <div className="text-3xl mb-2">🌱</div>
+            <h3 className="text-sm font-semibold mb-1" style={{ color: '#5a4a7c' }}>
+              Produits frais
+            </h3>
+            <p className="text-xs text-gray-600">
+              Direct des producteurs locaux
+            </p>
+          </div>
+
+          <div 
+            className="bg-white rounded-2xl p-5 shadow-lg text-center"
+            style={{ border: '2px solid #e0d4f7' }}
+          >
+            <div className="text-3xl mb-2">💳</div>
+            <h3 className="text-sm font-semibold mb-1" style={{ color: '#5a4a7c' }}>
+              Paiement sécurisé
+            </h3>
+            <p className="text-xs text-gray-600">
+              Plusieurs modes de paiement
+            </p>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+}
