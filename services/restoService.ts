@@ -16,7 +16,7 @@ export interface RestaurantOrderFromDB {
   quality: 'standard' | 'premium' | 'bio';
   dishCuisine?: string;
   dishCountry?: string;
-  dishIngredients?: string;
+  dishIngredients?: string[]; // ✅ Changé en string[] pour cohérence
   dishRecipe?: string;
 }
 
@@ -28,7 +28,7 @@ export interface MealForSave {
   quality: 'standard' | 'premium' | 'bio';
   cuisine?: string;
   country?: string;
-  ingredients?: string;
+  ingredients?: string[]; // ✅ Changé en string[] pour cohérence
   recipe?: string;
 }
 
@@ -80,7 +80,12 @@ export async function loadRestaurantOrders(userId: string): Promise<RestaurantOr
       quality: order.quality || 'standard',
       dishCuisine: order.dish_cuisine,
       dishCountry: order.dish_country,
-      dishIngredients: order.dish_ingredients,
+      // ✅ Convertir string DB → string[] pour l'application
+      dishIngredients: order.dish_ingredients 
+        ? (typeof order.dish_ingredients === 'string' 
+            ? order.dish_ingredients.split(', ').filter(Boolean)
+            : order.dish_ingredients)
+        : undefined,
       dishRecipe: order.dish_recipe,
     }));
 
@@ -121,7 +126,8 @@ export async function saveRestaurantOrder(
         dish_category: meal.category,
         dish_cuisine: meal.cuisine || null,
         dish_country: meal.country || null,
-        dish_ingredients: meal.ingredients || null,
+        // ✅ Convertir string[] → string pour la DB
+        dish_ingredients: meal.ingredients?.join(', ') || null,
         dish_recipe: meal.recipe || null,
         quantity: meal.quantity,
         quality: meal.quality,
@@ -350,6 +356,10 @@ export async function saveCompleteOrder(
             category: item.category,
             cuisine: item.cuisine,
             country: item.country,
+            // ✅ Convertir ingredients array en string pour la DB
+            ingredients: Array.isArray(item.ingredients) 
+              ? item.ingredients.join(', ') 
+              : item.ingredients,
             emoji: '🍽️',
           },
         });

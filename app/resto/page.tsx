@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Script from 'next/script';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Button from '@/components/ui/Button';
@@ -52,7 +53,7 @@ interface MenuItem {
 }
 
 interface Meal {
-  id: number | string;
+  id: string;
   name: string;
   price: number;
   category: 'entree' | 'principal' | 'accompagnement' | 'dessert' | 'boisson';
@@ -75,6 +76,32 @@ interface MealsByDate {
 }
 
 type MealType = 'breakfast' | 'lunch' | 'snack' | 'dinner';
+
+// Déclaration globale pour Paystack
+declare global {
+  interface Window {
+    PaystackPop?: {
+      setup: (config: PaystackConfig) => { openIframe: () => void };
+    };
+  }
+}
+
+interface PaystackConfig {
+  key: string | undefined;
+  email: string;
+  amount: number;
+  currency: string;
+  ref: string;
+  metadata: {
+    custom_fields: Array<{
+      display_name: string;
+      variable_name: string;
+      value: string;
+    }>;
+  };
+  callback: (response: { reference: string }) => void;
+  onClose: () => void;
+}
 
 const MEAL_TYPE_LABELS: Record<MealType, string> = {
   breakfast: 'Petit-déjeuner',
@@ -111,6 +138,7 @@ const CATEGORY_TO_DB: Record<string, string> = {
 export default function RestoPage() {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [paystackLoaded, setPaystackLoaded] = useState(false);
 
   // États
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -128,7 +156,7 @@ export default function RestoPage() {
   
   const [mealsByDate, setMealsByDate] = useState<MealsByDate>({});
 
-  // ✅ NOUVEAU: État pour les plats depuis Supabase
+  // État pour les plats depuis Supabase
   const [dishesFromDB, setDishesFromDB] = useState<MenuItem[]>([]);
   const [loadingDishes, setLoadingDishes] = useState(true);
 
@@ -147,7 +175,7 @@ export default function RestoPage() {
   const [paymentMethod, setPaymentMethod] = useState<'paystack' | 'cash' | ''>('');
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  // ✅ NOUVEAU: Charger les plats depuis Supabase
+  // Charger les plats depuis Supabase
   useEffect(() => {
     loadDishesFromSupabase();
   }, []);
@@ -191,7 +219,7 @@ export default function RestoPage() {
     }
   };
 
-  // ✅ Chargement des données utilisateur au montage
+  // Chargement des données utilisateur au montage
   useEffect(() => {
     if (authLoading) return;
     
@@ -203,7 +231,7 @@ export default function RestoPage() {
     }
   }, [user?.id, authLoading]);
 
-  // ✅ Fonction de chargement depuis Supabase
+  // Fonction de chargement depuis Supabase
   const loadDataFromSupabase = async () => {
     if (!user?.id) return;
     
@@ -268,7 +296,7 @@ export default function RestoPage() {
     }
   };
 
-  // ✅ Debouncing pour la taille de famille
+  // Debouncing pour la taille de famille
   useEffect(() => {
     if (user?.id && familySize > 0) {
       const timer = setTimeout(async () => {
@@ -335,7 +363,7 @@ export default function RestoPage() {
     setSelectedDate(date);
   };
 
-  // ✅ Vérifier si une date est dans le passé
+  // Vérifier si une date est dans le passé
   const isDateInPast = (date: Date): boolean => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -433,13 +461,18 @@ export default function RestoPage() {
     return Math.round(selectedMenuDetails.price * selectedQuantity * qualityMultiplier * familySize);
   };
 
-  // ✅ Confirmation de sélection de repas
+  // Génération d'ID unique
+  const generateMealId = (): string => {
+    return `meal_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  };
+
+  // Confirmation de sélection de repas
   const confirmMealSelection = async () => {
     if (!selectedMenuDetails) return;
 
     const dateKey = formatDate(selectedDate);
     const newMeal: Meal = {
-      id: Date.now(),
+      id: generateMealId(),
       name: selectedMenuDetails.name,
       price: selectedMenuDetails.price,
       category: selectedMenuDetails.category,
@@ -451,7 +484,7 @@ export default function RestoPage() {
       recipe: selectedMenuDetails.recipe,
     };
 
-    // ✅ MODE INVITÉ : Mémoire locale
+    // MODE INVITÉ : Mémoire locale
     if (!user?.id) {
       setMealsByDate(prev => {
         const dateMeals = prev[dateKey] || { breakfast: [], lunch: [], snack: [], dinner: [] };
@@ -471,7 +504,7 @@ export default function RestoPage() {
       return;
     }
 
-    // ✅ MODE CONNECTÉ : Supabase
+    // MODE CONNECTÉ : Supabase
     try {
       const orderId = await saveRestaurantOrder(
         user.id,
@@ -508,12 +541,12 @@ export default function RestoPage() {
     closeAllModals();
   };
 
-  // ✅ Suppression de repas
-  const removeMeal = async (mealType: MealType, mealId: number | string) => {
+  // Suppression de repas
+  const removeMeal = async (mealType: MealType, mealId: string) => {
     const dateKey = formatDate(selectedDate);
     const meal = mealsByDate[dateKey]?.[mealType].find(m => m.id === mealId);
     
-    // ✅ MODE INVITÉ
+    // MODE INVITÉ
     if (!user?.id) {
       setMealsByDate(prev => {
         const dateMeals = prev[dateKey];
@@ -535,7 +568,7 @@ export default function RestoPage() {
       return;
     }
 
-    // ✅ MODE CONNECTÉ
+    // MODE CONNECTÉ
     if (meal?.orderId) {
       try {
         const success = await deleteRestaurantOrder(meal.orderId, user.id);
@@ -567,7 +600,7 @@ export default function RestoPage() {
     });
   };
 
-  // ✅ NOUVEAU: Filtrer les menus depuis Supabase
+  // Filtrer les menus depuis Supabase
   const getFilteredMenus = () => {
     return dishesFromDB.filter(menu => {
       const matchesCategory = menu.category === currentCategory;
@@ -587,12 +620,17 @@ export default function RestoPage() {
     return meals.breakfast.length > 0 || meals.lunch.length > 0 || meals.snack.length > 0 || meals.dinner.length > 0;
   };
 
-  // ✅ NOUVEAU: Intégration Paystack
+  // Intégration Paystack
   const initiatePaystackPayment = async () => {
+    if (!paystackLoaded || !window.PaystackPop) {
+      alert('Erreur: Paystack non chargé. Veuillez réessayer.');
+      setIsProcessingPayment(false);
+      return;
+    }
+
     const totalAmount = getDayTotal() + 500; // + frais de livraison
     
-    // @ts-ignore - Paystack est chargé via script
-    const handler = window.PaystackPop?.setup({
+    const handler = window.PaystackPop.setup({
       key: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY,
       email: user?.email || 'guest@talier.ci',
       amount: totalAmount * 100, // Paystack utilise les centimes
@@ -612,7 +650,7 @@ export default function RestoPage() {
           }
         ]
       },
-      callback: function(response: any) {
+      callback: function(response) {
         console.log('✅ Paiement réussi:', response.reference);
         finalizeCompleteOrder(response.reference);
         setCheckoutStep(4);
@@ -623,15 +661,10 @@ export default function RestoPage() {
       }
     });
 
-    if (handler) {
-      handler.openIframe();
-    } else {
-      alert('Erreur: Paystack non chargé. Veuillez réessayer.');
-      setIsProcessingPayment(false);
-    }
+    handler.openIframe();
   };
 
-  // ✅ Finalisation complète de la commande
+  // Finalisation complète de la commande
   const finalizeCompleteOrder = async (paymentRef?: string) => {
     if (!user?.id) {
       console.log('💡 Mode invité : Commande non sauvegardée');
@@ -691,7 +724,7 @@ export default function RestoPage() {
   const weekDates = getWeekDates(currentDate);
   const currentMeals = getCurrentMeals();
 
-  // ✅ Afficher loader pendant chargement
+  // Afficher loader pendant chargement
   if (loading || authLoading || loadingDishes) {
     return (
       <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #d4c5f0 0%, #c9b5e8 100%)' }}>
@@ -713,10 +746,20 @@ export default function RestoPage() {
     <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #d4c5f0 0%, #c9b5e8 100%)' }}>
       <Header />
 
-      {/* Script Paystack */}
-      <script src="https://js.paystack.co/v1/inline.js" async></script>
+      {/* Script Paystack avec next/script */}
+      <Script 
+        src="https://js.paystack.co/v1/inline.js"
+        strategy="lazyOnload"
+        onLoad={() => {
+          setPaystackLoaded(true);
+          console.log('✅ Paystack script chargé');
+        }}
+        onError={() => {
+          console.error('❌ Erreur chargement Paystack');
+        }}
+      />
 
-      {/* ✅ Bannière mode invité */}
+      {/* Bannière mode invité */}
       {!user && (
         <div className="max-w-7xl mx-auto px-8 pt-4">
           <div 
